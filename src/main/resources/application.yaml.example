@@ -1,0 +1,91 @@
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+  devtools:
+    restart:
+      additional-paths: .
+      trigger-file: reload-trigger.txt
+      enabled: true
+    livereload:
+      enabled: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 200MB
+  data:
+    mongodb:
+      uri: mongodb://root:rootroot@mongodb
+      database: turtle
+      authentication-database: admin
+      auto-index-creation: true 
+server:
+  forward-headers-strategy: framework
+  error:
+    include-message: always
+    include-stacktrace: always
+springdoc:
+  use-fqn: true
+  swagger-ui:
+    enabled: true
+    path: /swagger
+influx:
+  enabled: true
+  host: influxdb # Host of InfluxDB.
+  port: 8086 # Port of InfluxDB.
+  username: root # Username to use in the basic auth.
+  password: rootroot # Password to use in the basic auth.
+  org: turtle # Default destination organization for writes and queries.
+  bucket: turtle # Default destination bucket for writes.
+app:
+  public_routes: /public/**,/special/**,/actuator/**,/swagger,/webjars/swagger-ui/**,/v3/api-docs/**,/v3/api-docs.yaml
+  admin_email: lazyturtleshopping@gmail.com
+  # tr -dc A-Za-z0-9 </dev/urandom | head -c 32 ; echo ''
+  admin_password: 123456789
+  anonymity_email: anonymity@turtlelazy.com
+  anonymity_password: anonymity_password
+  file:
+    static_file_path: /static
+    internal_file_path: /internal
+    expiration: 86400
+  special:
+    cron:
+      # tr -dc A-Za-z0-9 </dev/urandom | head -c 64 ; echo ''
+      token: VJOKePfy01hlop7zQ21rMJipYYseFynuPNY6DAECRB3MUYq7zyGkIZYOXhicE01d
+  ecpay:
+    aioCheckOut:
+      merchantID: 3002607
+      hashKey: pwFHCqoQZGmho4w6
+      hashIV: EkRm7iFT261dpevs
+    logistics:
+      merchantID: 2000933
+      hashKey: XBERn1YOvpM9nfZc
+      hashIV: h1ONHk4P4yqbl5LK
+    logisticsCreateOrderUrl: https://logistics-stage.ecpay.com.tw/Express/Create
+    callbackUrl:
+      returnURL: http://backend/public/v1/ecpay/payment/callback/paymentcallback
+      paymentInfoUrl: http://backend/public/v1/ecpay/payment/callback/paymentinfo
+      logisticsCvsMapUrl: http://backend/public/v1/ecpay/logistics/callback/cvsmap
+      logisticsUpdateUrl: http://backend/public/v1/ecpay/logistics/callback/logisticsupdate
+    redirectUrl:
+      setCvsmapFinishUrl: http://frontend
+  redis:
+    host: redis-sentinel
+    port: 26379
+    password: password
+    messageHeartbeatSeconds: 5
+    messageMaxTimeoutSeconds: 600
+  frontendUrls:
+    resetPassword: http://frontend/user/resetPassword
+    verifyEmail: http://frontend/user/verifyEmail
+    checkoutEmailButtonUrl: http://frontend/checkout
+jwt:
+  # tr -dc A-Za-z0-9 </dev/urandom | head -c 128 ; echo ''
+  secret: XwTIAh5ZlC3pKcIVopKNTA2WEXyjLHMLjQlCW0uNWLx3vwguHWJTMAjtLTyf4z508rbf40nF8aQCUv3UtMhrLmvdzzhgT5KLB46FFFBrRdXQxsfpcItKfvcRya0ryVyi
+  expiration: 28800 # token expiration in seconds
+thymeleaf:
+  cache: false
+  prefix: classpath:/templates/    # 設定去templates資料夾找html檔案
+  suffix: .html
+  encoding: UTF-8
+  mode: HTML5

@@ -1,0 +1,123 @@
+kind: pipeline
+type: docker
+name: staging-server
+steps:
+
+- name: copy-default-application.yaml
+  image: alpine
+  commands:
+  - cp ./src/main/resources/application.yaml.example ./src/main/resources/application.yaml
+
+- name: build-java
+  image: gradle
+  commands:
+  - gradle build -x test
+
+- name: tag-docker-image
+  image: alpine
+  commands:
+  - echo -n "$(date +'%Y-%m-%d_%H-%M')_${DRONE_COMMIT}, latest" > .tags
+
+- name: build-docker-image
+  image: plugins/docker
+  settings:
+    repo: gitea.turtlelazy.com/turtle/turtle-staging-backend
+    registry: gitea.turtlelazy.com
+    username:
+      from_secret: registry_username
+    password:
+      from_secret: registry_password
+
+#- name: vuln-scan
+#  image: aquasec/trivy
+#  environment: 
+#    TRIVY_USERNAME:
+#      from_secret: registry_username
+#    TRIVY_PASSWORD:
+#      from_secret: registry_password
+#  commands:
+#  - trivy image gitea.turtlelazy.com/turtle/turtle-backend:latest
+
+- name: update-to-gke-cluster
+  image: gitea.turtlelazy.com/devop/gke-docker
+  pull: always
+  settings:
+    cluster_name: cluster-1
+    cluster_location: us-central1-a
+    project_name: lazyturtle-393117
+    helm_chart_registry_name: registry
+    helm_chart_registry_url: https://gitea.turtlelazy.com/api/packages/DevOp/helm
+    helm_chart_registry_username:
+      from_secret: registry_username
+    helm_chart_registry_password:
+      from_secret: registry_password
+    deploy_namespace: turtle-staging
+    release_name: turtle
+    helm_chart_repo_name: turtle-staging
+    image_indicator: backend.image.tag
+image_pull_secrets:
+- dockerconfigjson 
+  
+trigger: 
+  event:
+  - push
+  branch:
+  - deploy
+
+---
+
+kind: pipeline
+type: docker
+name: production-server
+steps:
+
+- name: copy-default-application.yaml
+  image: alpine
+  commands:
+  - cp ./src/main/resources/application.yaml.example ./src/main/resources/application.yaml
+
+- name: build-java
+  image: gradle
+  commands:
+  - gradle build -x test
+
+- name: tag-docker-image
+  image: alpine
+  commands:
+  - echo -n "$(date +'%Y-%m-%d_%H-%M')_${DRONE_COMMIT}, latest" > .tags
+
+- name: build-docker-image
+  image: plugins/docker
+  settings:
+    repo: gitea.turtlelazy.com/turtle/turtle-production-backend
+    registry: gitea.turtlelazy.com
+    username:
+      from_secret: registry_username
+    password:
+      from_secret: registry_password
+
+- name: update-to-gke-cluster
+  image: gitea.turtlelazy.com/devop/gke-docker
+  pull: always
+  settings:
+    cluster_name: cluster-1
+    cluster_location: us-central1-a
+    project_name: lazyturtle-393117
+    helm_chart_registry_name: registry
+    helm_chart_registry_url: https://gitea.turtlelazy.com/api/packages/DevOp/helm
+    helm_chart_registry_username:
+      from_secret: registry_username
+    helm_chart_registry_password:
+      from_secret: registry_password
+    deploy_namespace: turtle-production
+    release_name: turtle
+    helm_chart_repo_name: turtle-production
+    image_indicator: backend.image.tag
+image_pull_secrets:
+- dockerconfigjson 
+  
+trigger: 
+  event:
+  - push
+  branch:
+  - production

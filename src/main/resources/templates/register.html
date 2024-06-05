@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Register</title>
+
+    <!-- Custom fonts for this template-->
+    <link th:href="@{vendor/fontawesome-free/css/all.min.css}" rel="stylesheet" type="text/css">
+
+    <!-- Custom styles for this template-->
+    <link th:href="@{css/sb-admin-2.min.css}" rel="stylesheet">
+
+</head>
+
+<body class="bg-gradient-primary">
+
+    <div class="container">
+
+        <div class="card o-hidden border-0 shadow-lg my-5">
+            <div class="card-body p-0">
+                <!-- Nested Row within Card Body -->
+                <div class="row">
+                    <div class="col-lg-5 d-none d-lg-block bg-register-image"></div>
+                    <div class="col-lg-7">
+                        <div class="p-5">
+                            <div class="text-center">
+                                <h1 class="h4 text-gray-900 mb-4">Create an Account!</h1>
+                            </div>
+                            <form id ="registerForm">
+                                <div class="form-group row">
+                                    <div class="col mb-3 mb-sm-0">
+                                        <input type="text" class="form-control form-control-user" id="name" placeholder="Name" >
+                                        <div class="invalid-feedback">Please provide your name.</div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <input type="date" class="form-control form-control-user" id="birthday" placeholder="Birthday" >
+                                        <div class="invalid-feedback">Please provide your birthday.</div>
+                                    </div>                                    
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" class="form-control form-control-user" id="email" placeholder="Email Address" >
+                                    <div class="invalid-feedback">Please provide a valid email address.</div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-6 mb-3 mb-sm-0">
+                                        <input type="text" class="form-control form-control-user" id="height" placeholder="Height (cm)" >
+                                        <div class="invalid-feedback" id="height-feedback">Please provide a valid height.</div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <input type="text" class="form-control form-control-user" id="weight" placeholder="Weight (kg)" >
+                                        <div class="invalid-feedback" id="weight-feedback">Please provide a valid weight.</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-6 mb-3 mb-sm-0">
+                                        <input type="password" class="form-control form-control-user" id="password" placeholder="Password">
+                                        <div class="invalid-feedback" id="password-feedback">Password is required.</div>
+                                    </div>
+                                    
+                                </div>
+
+                                <button class="btn btn-primary btn-user btn-block mb-2" type="submit">Register Account</button>
+                            </form>
+
+        
+                        
+
+                            <div class="text-center">
+                                <a class="small" href="login">Already have an account? Login!</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap core JavaScript-->
+    <script th:src="@{vendor/jquery/jquery.min.js}"></script>
+    <script th:src="@{vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script th:src="@{vendor/jquery-easing/jquery.easing.min.js}"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script th:src="@{js/sb-admin-2.min.js}"></script>
+    <script>
+        $('#registerForm').on('submit', function (e) {
+            // Prevent default form submission
+            e.preventDefault();
+            // Create user object
+            var user = {
+                email: $('#email').val(),
+                password: $('#password').val(),
+                name: $('#name').val(),
+                birthday:$('#birthday').val(),
+                height:$('#height').val(),
+                weight:$('#weight').val()
+            };
+            console.log(user)
+            // Send POST request to /api/user
+            $.ajax({
+                type: 'POST',
+                url: '/user/register',
+                data: JSON.stringify(user),
+                contentType: 'application/json',
+                // If success, alert user and redirect to login page
+                success: function (response) {
+                    alert(response.name + ' registered successfully');
+                    window.location.href = '/login';
+                },
+                // If error, alert user
+                error: function (error) {
+                    alert(error.responseText);
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

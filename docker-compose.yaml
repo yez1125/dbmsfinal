@@ -1,0 +1,113 @@
+services:
+  spring-reloader:
+    image: gradle:latest
+    volumes:
+      - .:/tmp/spring
+      - /gradle_dependency:/root/.gradle/caches/modules-2/files-2.1
+    working_dir: /tmp/spring
+    container_name: spring-reloader
+    depends_on:
+      - mongo-express
+    stop_grace_period: 0s
+    command: [ "bash", "./buildAndReload.sh" ]
+
+  spring:
+    image: gradle:latest
+    volumes:
+      - .:/tmp/spring
+      - /gradle_dependency:/root/.gradle/caches/modules-2/files-2.1
+    working_dir: /tmp/spring
+    container_name: spring
+    depends_on:
+      - spring-reloader
+    stop_grace_period: 0s
+    ports:
+      - 64550:8080
+    command: [ "bash", "./bootRun.sh" ]
+  
+  mongodb:
+    image: mongo:latest
+    # image: mongo:4.4.18
+    container_name: mongodb
+    volumes:
+      - /db/turtle/mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootroot
+    healthcheck:
+      test: echo 'db.stats().ok' | mongosh mongodb://root:rootroot@localhost:27017 --quiet
+      # test: echo 'db.stats().ok' | mongo mongodb://root:rootroot@localhost:27017 --quiet
+      retries: 20
+      interval: 5s
+      start_period: 3s
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: rootroot
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_BASICAUTH_USERNAME: root
+      ME_CONFIG_BASICAUTH_PASSWORD: rootroot
+    ports:
+      - 64549:8081
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    volumes:
+      - /db/turtle/influxdb:/var/lib/influxdb2
+    ports:
+      - 64547:8086
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: root
+      DOCKER_INFLUXDB_INIT_PASSWORD: rootroot
+      DOCKER_INFLUXDB_INIT_ORG: turtle
+      DOCKER_INFLUXDB_INIT_BUCKET: turtle
+      DOCKER_INFLUXDB_INIT_RETENTION: 1w
+
+  redis:
+    image: 'bitnami/redis:latest'
+    container_name: redis
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=password
+    user: root
+    volumes:
+      - /db/turtle/redis-master:/bitnami/redis/data
+  redis-slave:
+    image: 'bitnami/redis:latest'
+    container_name: redis-slave
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis
+      - REDIS_MASTER_PASSWORD=password
+      - REDIS_PASSWORD=password
+    user: root
+    depends_on:
+      - redis
+  redis-sentinel:
+    image: 'bitnami/redis-sentinel:latest'
+    container_name: redis-sentinel
+    environment:
+      - REDIS_MASTER_PASSWORD=password
+    user: root
+    depends_on:
+      - redis
+      - redis-slave
+
+  redisinsight:
+    image: redislabs/redisinsight
+    container_name: redisinsight
+    ports:
+      - 64548:8001
+    environment:
+      REDISINSIGHT_PASSWORD: password
+    user: root
+    volumes:
+      - /db/turtle/redisinsight:/db
